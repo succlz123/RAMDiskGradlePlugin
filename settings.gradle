@@ -1,0 +1,4 @@
+rootProject.name = 'RAMDiskGradlePlugin'
+include ':app'
+include ':app-test'
+include ':plugin'
