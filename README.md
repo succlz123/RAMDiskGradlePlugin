@@ -23,7 +23,7 @@ apply plugin: 'org.succlz123.ramdisk'
 
 ### Windows
 
-For Windows platform, there is no convenient way to create a RAM disk, so download the imdisk to work with it.
+For Windows platform, there is no convenient way to use system tool to create a RAM disk, so please download the imdisk to work with it.
 
 https://sourceforge.net/projects/imdisk-toolkit/
 
@@ -39,9 +39,5 @@ RAMDisk.name=RAMDiskForGradle
 RAMDisk.size=1024
 # apfs or hfs+, defalut is apfs
 RAMDisk.mac.format=apfs
-# ntfs or fat32, defalut is ntfs
-RAMDisk.windows.format=ntfs
-# ext4, defalut is ext4
-RAMDisk.linux.format=ext4
 ~~~
 
