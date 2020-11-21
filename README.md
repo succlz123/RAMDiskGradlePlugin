@@ -21,6 +21,12 @@ dependencies {
 apply plugin: 'org.succlz123.ramdisk'
 ~~~
 
+### Windows
+
+For Windows platform, there is no convenient way to create a RAM disk, so download the imdisk to work with it.
+
+https://sourceforge.net/projects/imdisk-toolkit/
+
 ## Option
 
 gradle.properties

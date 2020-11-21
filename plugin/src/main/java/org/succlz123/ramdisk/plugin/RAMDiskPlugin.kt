@@ -18,9 +18,6 @@ class RAMDiskPlugin : Plugin<Project> {
         const val SYS_WINDOWS = "Windows"
         const val SYS_MAC = "Mac"
 
-        const val FORMAT_EXT4 = "ext4"
-        const val FORMAT_NTFS = "ntfs"
-        const val FORMAT_FAT32 = "fat32"
         const val FORMAT_APFS = "apfs"
         const val FORMAT_HFS = "hfs"
     }
@@ -58,45 +55,62 @@ class RAMDiskPlugin : Plugin<Project> {
         }
         when (os) {
             SYS_LINUX -> {
-                val format = parameter["RAMDisk.linux.format"] ?: FORMAT_EXT4
-                project.logger.log(
-                    LogLevel.QUIET,
-                    "$TAG -> RAMDisk name: $name, diskSize: $size MB, format: $format"
-                )
+                val dirStr = "/var/$name"
+                val ramFile = File(dirStr)
+                if (!ramFile.exists()) {
+                    val isSuccess = createLinuxRAMDisk(project, name, size)
+                    if (!isSuccess) {
+                        return
+                    }
+                }
+                useRAMDisk(project, ramFile, name, size, "")
             }
             SYS_WINDOWS -> {
-                val format = parameter["RAMDisk.window.format"] ?: FORMAT_NTFS
-                project.logger.log(
-                    LogLevel.QUIET,
-                    "$TAG -> RAMDisk name: $name, diskSize: $size MB, format: $format"
-                )
+                val dirStr = "/Volumes/$name"
+                val ramFile = File(dirStr)
+                if (!ramFile.exists()) {
+                    val isSuccess = createWindowsRAMDisk(project, name, size)
+                    if (!isSuccess) {
+                        return
+                    }
+                }
+                useRAMDisk(project, ramFile, name, size, "")
             }
             SYS_MAC -> {
                 val format = parameter["RAMDisk.mac.format"] as? String ?: FORMAT_APFS
                 val dirStr = "/Volumes/$name"
-                val filePath = File(dirStr)
-                if (!filePath.exists()) {
+                val ramFile = File(dirStr)
+                if (!ramFile.exists()) {
                     val isSuccess = createMacRamDisk(project, name, size, format)
                     if (!isSuccess) {
                         return
                     }
                 }
-                if (filePath.exists()) {
-                    val projectParent = project.rootProject
-                    for (curProject in projectParent.allprojects) {
-                        curProject.buildDir =
-                            File("$dirStr/${projectParent.name}/${curProject.name}")
-                    }
-                    val fileSizeMB: Double = BigDecimal(filePath.totalSpace / 1024 / 1024).setScale(
-                        2, BigDecimal.ROUND_HALF_UP
-                    ).toDouble()
-                    project.logger.log(
-                        LogLevel.QUIET,
-                        "$TAG -> RAMDisk is enable: $name, ExpectationSize: $size MB, ActualSize: $fileSizeMB MB, format: $format"
-                    )
-                }
+                useRAMDisk(project, ramFile, name, size, format)
             }
         }
+    }
+
+    private fun createLinuxRAMDisk(project: Project, name: String, size: String): Boolean {
+        val mkdirCmd = "mkdir /var/${name}"
+        var result = exec(project, mkdirCmd)
+        if (!result) {
+            return false
+        }
+        val mountCmd = "mount -t tmpfs none /var/${name} -o size=${size}m"
+        result = exec(project, mountCmd)
+        return result
+    }
+
+    private fun createWindowsRAMDisk(project: Project, name: String, size: String): Boolean {
+        val checkImDiskCmd = ""
+        var result = exec(project, checkImDiskCmd)
+        if (!result) {
+            return false
+        }
+        val execImDiskCmd = ""
+        result = exec(project, execImDiskCmd)
+        return result
     }
 
     private fun createMacRamDisk(
@@ -119,6 +133,29 @@ class RAMDiskPlugin : Plugin<Project> {
             else -> {
                 false
             }
+        }
+    }
+
+    private fun useRAMDisk(
+        project: Project,
+        ramDirFile: File,
+        name: String,
+        size: String,
+        format: String?
+    ) {
+        if (ramDirFile.exists()) {
+            val projectParent = project.rootProject
+            for (curProject in projectParent.allprojects) {
+                curProject.buildDir =
+                    File("${ramDirFile.absolutePath}/${projectParent.name}/${curProject.name}")
+            }
+            val fileSizeMB: Double = BigDecimal(ramDirFile.totalSpace / 1024 / 1024).setScale(
+                2, BigDecimal.ROUND_HALF_UP
+            ).toDouble()
+            project.logger.log(
+                LogLevel.QUIET,
+                "$TAG -> RAMDisk is enable: $name, ExpectationSize: $size MB, ActualSize: $fileSizeMB MB, format: $format"
+            )
         }
     }
 
