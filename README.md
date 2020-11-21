@@ -16,7 +16,7 @@ dependencies {
 }
 ~~~
 
-** Just need to apply plugin in the app module once **
+**Just need to apply plugin in the app module once**
 ~~~
 apply plugin: 'org.succlz123.ramdisk'
 ~~~
