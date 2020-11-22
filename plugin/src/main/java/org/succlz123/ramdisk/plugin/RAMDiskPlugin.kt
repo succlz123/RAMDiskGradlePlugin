@@ -44,7 +44,7 @@ class RAMDiskPlugin : Plugin<Project> {
         val osmxb = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
         val physicalTotal = osmxb.totalPhysicalMemorySize / (1024 * 1024 * 1024)
         var enable = parameter["RAMDisk.enable"]
-        if (physicalTotal > 16) {
+        if (physicalTotal > 20) {
             enable = "true"
         }
         if (enable != "true") {

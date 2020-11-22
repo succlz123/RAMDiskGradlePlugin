@@ -41,6 +41,10 @@ RAMDisk.size=1024
 RAMDisk.mac.format=apfs
 ~~~
 
+## Other
+
+if you encouter some stranger issues with this plugin, please clean the build cache and delete the .gradle dir which locate in the project root path.
+
 ## ToDo
 
 > Crazy Mode
