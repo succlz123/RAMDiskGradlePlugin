@@ -32,7 +32,7 @@ https://sourceforge.net/projects/imdisk-toolkit/
 gradle.properties
 
 ~~~
-# default is false
+# if your RAM is smaller than 16GB, you need to enable the plugin manually
 RAMDisk.enable=true
 RAMDisk.name=RAMDiskForGradle
 # 1024MB = 1GB
@@ -41,3 +41,8 @@ RAMDisk.size=1024
 RAMDisk.mac.format=apfs
 ~~~
 
+## ToDo
+
+> Crazy Mode
+
+Move the Gradle .cache dir into RAM disk.

@@ -1,9 +1,11 @@
 package org.succlz123.ramdisk.plugin
 
+import com.sun.management.OperatingSystemMXBean
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.LogLevel
 import java.io.File
+import java.lang.management.ManagementFactory
 import java.math.BigDecimal
 import java.util.regex.Pattern
 
@@ -39,9 +41,14 @@ class RAMDiskPlugin : Plugin<Project> {
             }
         }
         val parameter = project.rootProject.properties
-        val enable = parameter["RAMDisk.enable"]
+        val osmxb = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
+        val physicalTotal = osmxb.totalPhysicalMemorySize / (1024 * 1024 * 1024)
+        var enable = parameter["RAMDisk.enable"]
+        if (physicalTotal > 16) {
+            enable = "true"
+        }
         if (enable != "true") {
-            project.logger.log(LogLevel.INFO, "$TAG RAMDisk plugin is disable")
+            project.logger.log(LogLevel.QUIET, "$TAG RAMDisk plugin is disable")
             return
         }
         val name = parameter["RAMDisk.name"] as? String ?: NAME
@@ -63,7 +70,7 @@ class RAMDiskPlugin : Plugin<Project> {
                         return
                     }
                 }
-                useRAMDisk(project, ramFile, name, size, "")
+                useRAMDisk(project, ramFile, name, size, "", physicalTotal)
             }
             SYS_WINDOWS -> {
                 val dirStr = "/Volumes/$name"
@@ -74,7 +81,7 @@ class RAMDiskPlugin : Plugin<Project> {
                         return
                     }
                 }
-                useRAMDisk(project, ramFile, name, size, "")
+                useRAMDisk(project, ramFile, name, size, "", physicalTotal)
             }
             SYS_MAC -> {
                 val format = parameter["RAMDisk.mac.format"] as? String ?: FORMAT_APFS
@@ -86,7 +93,7 @@ class RAMDiskPlugin : Plugin<Project> {
                         return
                     }
                 }
-                useRAMDisk(project, ramFile, name, size, format)
+                useRAMDisk(project, ramFile, name, size, format, physicalTotal)
             }
         }
     }
@@ -141,7 +148,8 @@ class RAMDiskPlugin : Plugin<Project> {
         ramDirFile: File,
         name: String,
         size: String,
-        format: String?
+        format: String?,
+        physicalTotal: Long
     ) {
         if (ramDirFile.exists()) {
             val projectParent = project.rootProject
@@ -149,12 +157,10 @@ class RAMDiskPlugin : Plugin<Project> {
                 curProject.buildDir =
                     File("${ramDirFile.absolutePath}/${projectParent.name}/${curProject.name}")
             }
-            val fileSizeMB: Double = BigDecimal(ramDirFile.totalSpace / 1024 / 1024).setScale(
-                2, BigDecimal.ROUND_HALF_UP
-            ).toDouble()
+            val fileSizeMB = ramDirFile.totalSpace / 1024 / 1024
             project.logger.log(
                 LogLevel.QUIET,
-                "$TAG -> RAMDisk is enable: $name, ExpectationSize: $size MB, ActualSize: $fileSizeMB MB, format: $format"
+                "$TAG -> RAMDisk is enable: DiskName: $name, ExpectationSize: $size MB, ActualSize: $fileSizeMB MB, format: $format, PC Physical Memory Size: ${physicalTotal}GB"
             )
         }
     }
